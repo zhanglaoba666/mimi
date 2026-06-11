@@ -7,41 +7,38 @@
 <style>
 html,body{margin:0;padding:0;overflow:hidden;font-family:"PingFang SC","Microsoft YaHei",sans-serif;touch-action:none;}
 
-/* ---- 开场婚礼页 ---- */
+/* ---- 1️⃣ 开场页：婚礼背景 ---- */
 #startScreen{
     position:fixed;inset:0;z-index:100;
-    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
-                url('https://images.unsplash.com/photo-1543087903-2d5fd775e75a?auto=format&fit=crop&w=1600&q=80');
+    background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+                url('https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1600&q=80');
     background-size:cover;
     background-position:center;
     display:flex;justify-content:center;align-items:center;flex-direction:column;
-    transition:opacity 0.8s;
+    transition:opacity 0.6s;
 }
 #startScreen h1{
     color:white;
     font-size: clamp(28px, 8vw, 52px);
-    text-shadow: 0 0 20px #ff4d6d, 0 0 40px #ff4d6d;
+    text-shadow: 0 0 20px #ff4d6d;
     text-align:center;
     margin-bottom:40px;
-    animation: pulse 1.5s infinite;
 }
 #startBtn{
-    padding: 18px 60px;
-    font-size: 24px;
+    padding: 20px 70px;
+    font-size: 26px;
     border:none;
     border-radius: 50px;
     background: linear-gradient(45deg, #ff4d6d, #ff8e8e);
     color:white;
     cursor:pointer;
     box-shadow: 0 10px 30px rgba(255,77,109,0.5);
-    transition:transform 0.2s;
+    transition:transform 0.1s;
 }
-#startBtn:hover{transform:scale(1.05);}
+#startBtn:active{transform:scale(0.95);}
 
-/* ---- 游戏界面 ---- */
+/* ---- 2️⃣ 游戏页：日漫樱花背景 ---- */
 #gameScreen{display:none;position:fixed;inset:0;}
-
-/* 🌸 日漫背景图 */
 #gameBg{
     position:absolute;
     inset:0;
@@ -49,40 +46,34 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:"PingFang SC","Microsof
     z-index:0;
     filter:brightness(0.85);
 }
-
 canvas{display:block;position:absolute;inset:0;z-index:1;}
-
-/* UI */
 #ui{position:fixed;top:10px,left:0;width:100%;text-align:center;color:#ffafcc;font-size:18px;z-index:3;pointer-events:none;}
-#score{font-size:24px;font-weight:bold;color:#ff4d6d;text-shadow:0 0 10px #ff4d6d88;}
+#score{font-size:24px;font-weight:bold;color:#ff4d6d;}
 
-/* 表白页 */
+/* ---- 3️⃣ 表白页 ---- */
 #love{display:none;position:fixed;inset:0;z-index:10;justify-content:center;align-items:center;flex-direction:column;padding:20px;text-align:center;background:radial-gradient(circle at 50% 50%, #2d1e3e 0%, #0f0c29 100%);}
-#love h1{color:#ff4d6d;font-size:32px;margin-bottom:20px;animation:pulse 2s infinite;}
-#text{color:#f0f0f0;font-size:19px,line-height:1.9;max-width:340px,min-height:150px;}
+#love h1{color:#ff4d6d;font-size:32px;margin-bottom:20px;}
+#text{color:#f0f0f0;font-size:19px;line-height:1.9;max-width:340px;}
 #finalScore{color:#ffafcc;font-size:20px;margin-top:10px;}
-#nextBtn{margin-top:20px;padding:14px 44px;border:none;border-radius:30px,background:#ff4d6d,color:white,font-size:18px,cursor:pointer,display:none,box-shadow:0 0 20px #ff4d6d88;}
-@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+#nextBtn{margin-top:20px;padding:14px 44px;border:none;border-radius:30px,background:#ff4d6d,color:white,font-size:18px,cursor:pointer,display:none;}
 </style>
 </head>
 <body>
 
-<!-- 开场婚礼页 -->
+<!-- 1️⃣ 开场页 -->
 <div id="startScreen">
     <h1>逃离继权的求爱</h1>
     <button id="startBtn">开始逃离 🏃♂️</button>
 </div>
 
-<!-- 游戏页 -->
+<!-- 2️⃣ 游戏页 -->
 <div id="gameScreen">
-    <!-- 日漫背景层 -->
     <div id="gameBg"></div>
-    <!-- 画布层（用来画角色、爱心、特效） -->
     <canvas id="c"></canvas>
     <div id="ui">躲避距离：<span id="score">0</span> 米</div>
 </div>
 
-<!-- 表白页 -->
+<!-- 3️⃣ 表白页 -->
 <div id="love">
   <h1>黄崇皓，我有话对你说</h1>
   <div id="text"></div>
@@ -91,45 +82,65 @@ canvas{display:block;position:absolute;inset:0;z-index:1;}
 </div>
 
 <script>
-/* ---- 点击开始 ---- */
+/* ---- 核心：按钮点击跳转 ---- */
 document.getElementById('startBtn').onclick = ()=>{
-    document.getElementById('startScreen').style.opacity=0;
+    document.getElementById('startScreen').style.opacity = '0';
     setTimeout(()=>{
-        document.getElementById('startScreen').style.display='none';
-        document.getElementById('gameScreen').style.display='block';
-        if(!currentBGM) playBGM(bgm_game);
-    },800);
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('gameScreen').style.display = 'block';
+        initGame(); // 启动游戏
+    }, 600);
 };
 
-/* ---- 画布初始化 ---- */
-const cv=document.getElementById('c'), cx=cv.getContext('2d');
-let W,H;
-function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
-resize(); addEventListener('resize',resize);
+/* ---- 游戏逻辑 ---- */
+let W,H,cv,cx;
+let P, hearts=[], score=0, hit=0, over=false;
 
-/* ---- 音乐 ---- */
-const bgm_game = new Audio("https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3");
-const bgm_love = new Audio("https://assets.mixkit.co/music/preview/mixkit-romantic-sunset-687.mp3");
-bgm_game.loop = bgm_love.loop = true;
-bgm_game.volume = 0.3; bgm_love.volume = 0.4;
-let currentBGM = null;
-function playBGM(audio){
-    if(currentBGM === audio) return;
-    if(currentBGM) { currentBGM.pause(); currentBGM.currentTime = 0; }
-    currentBGM = audio;
-    audio.play().catch(()=>{});
+function initGame(){
+    cv=document.getElementById('c'); cx=cv.getContext('2d');
+    W=cv.width=innerWidth; H=cv.height=innerHeight;
+    
+    P={x:W/2,y:H/2,r:28};
+    
+    // ✅ 触屏拖动黄崇皓
+    cv.addEventListener('touchmove', e=>{
+        e.preventDefault();
+        P.x=e.touches[0].clientX;
+        P.y=e.touches[0].clientY;
+    },{passive:false});
+
+    let frame=0;
+    (function loop(){
+        requestAnimationFrame(loop);
+        cx.clearRect(0,0,W,H);
+        
+        // 边界限制
+        P.x=Math.max(P.r, Math.min(W-P.r, P.x));
+        P.y=Math.max(P.r+60, Math.min(H-P.r-100, P.y));
+        
+        // 生成爱心
+        if(frame%40===0) hearts.push({x:Math.random()*(W-60)+30,y:-30,v:3,r:18});
+        
+        // 逻辑
+        for(let i=hearts.length-1;i>=0;i--){
+            const h=hearts[i]; h.y+=h.v;
+            if(Math.hypot(h.x-P.x,h.y-P.y)<h.r+P.r){ hearts.splice(i,1); hit++; if(hit>=3) endGame(); continue; }
+            if(h.y>H+40){ hearts.splice(i,1); score+=10; document.getElementById('score').textContent=score; }
+        }
+        
+        // 画黄崇皓
+        cx.fillStyle='#89c2d9'; cx.beginPath(); cx.arc(P.x,P.y,P.r,0,Math.PI*2); cx.fill();
+        cx.fillStyle='#1d3557'; cx.font='bold 14px sans-serif'; cx.textAlign='center'; cx.fillText('黄崇皓',P.x,P.y+45);
+        
+        // 画爱心
+        hearts.forEach(h=>{
+            cx.save();cx.translate(h.x,h.y);cx.scale(h.r/24,h.r/24);
+            cx.fillStyle='#ff4d6d';
+            cx.beginPath(); cx.moveTo(0,-12); cx.bezierCurveTo(-12,-24,-28,-8,-28,8); cx.bezierCurveTo(-28,24,-12,36,0,48); cx.bezierCurveTo(12,36,28,24,28,8); cx.bezierCurveTo(28,-8,12,-24,0,-12); cx.fill(); cx.restore();
+        });
+        
+        frame++;
+    })();
 }
 
-/* ---- 浪漫背景粒子（极光+星星+樱花） ---- */
-const aurora = [];
-const stars = [];
-const petals = []; // 樱花花瓣
-
-for(let i=0;i<5;i++) aurora.push({x:Math.random()*W, y:Math.random()*H, w:Math.random()*300+200, h:Math.random()*100+50, s:Math.random()*0.002+0.001});
-for(let i=0;i<150;i++) stars.push({x:Math.random()*W, y:Math.random()*H, s:Math.random()*1.5, b:Math.random()*Math.PI*2});
-for(let i=0;i<30;i++) petals.push({x:Math.random()*W, y:Math.random()*H, s:Math.random()*3+2, r:Math.random()*Math.PI*2, rs:Math.random()*0.02-0.01});
-
-/* ---- 黄崇皓（Q版） ---- */
-const P={x:W/2,y:H/2, r:28, mood:'normal'};
-cv.addEventListener('touchstart', e=>{e.preventDefault(); P.x=e.touches[0].clientX; P.y=e.touches[0].clientY;},{passive:false});
-cv.addEventListener('touchmove', e=>{e.preventDefault(); P.x=e.touches[0].clientX; P.y=e.touches[0].c
+function endGame(){
